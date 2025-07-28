@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param,  } from '@nestjs/common';
 
 @Controller('assignments')
 export class AssignmentsController {
@@ -20,6 +20,21 @@ export class AssignmentsController {
           shiftId: 2,
           user: { name: 'Jane Commander' },
           shift: { location: 'Perimeter', startTime: '2025-07-28T16:00:00Z' },
+        },
+      ],
+    };
+  }
+
+  @Get('user/:userId')
+  findByUser(@Param('userId') userId: string) {
+    return {
+      message: `Mock: Get assignments for user ${userId}`,
+      data: [
+        {
+          id: 1,
+          userId: parseInt(userId),
+          shiftId: 1,
+          shift: { location: 'Main Gate', startTime: '2025-07-28T08:00:00Z' },
         },
       ],
     };
