@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 
 @Controller('shifts')
 export class ShiftsController {
@@ -20,6 +20,19 @@ export class ShiftsController {
           location: 'Perimeter',
         },
       ],
+    };
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return {
+      message: `Mock: Get shift ${id}`,
+      data: {
+        id: parseInt(id),
+        startTime: '2025-07-28T08:00:00Z',
+        endTime: '2025-07-28T16:00:00Z',
+        location: 'Main Gate',
+      },
     };
   }
 }
