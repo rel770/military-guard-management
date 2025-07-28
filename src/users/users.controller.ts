@@ -12,4 +12,12 @@ export class UsersController {
       ],
     };
   }
+
+  @Get('profile')
+  getProfile() {
+    return {
+      message: 'Mock: Get user profile',
+      data: { id: 1, name: 'Current User', role: 'soldier' },
+    };
+  }
 }
