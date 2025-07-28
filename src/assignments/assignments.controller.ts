@@ -1,4 +1,4 @@
-import { Controller, Get, Param,  } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 
 @Controller('assignments')
 export class AssignmentsController {
@@ -37,6 +37,14 @@ export class AssignmentsController {
           shift: { location: 'Main Gate', startTime: '2025-07-28T08:00:00Z' },
         },
       ],
+    };
+  }
+
+  @Post()
+  create(@Body() createAssignmentDto: any) {
+    return {
+      message: 'Mock: Assignment created successfully',
+      data: { id: 3, ...createAssignmentDto },
     };
   }
 }
