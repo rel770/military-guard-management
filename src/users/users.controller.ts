@@ -1,4 +1,5 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Controller('users')
 export class UsersController {
@@ -18,6 +19,14 @@ export class UsersController {
     return {
       message: 'Mock: Get user profile',
       data: { id: 1, name: 'Current User', role: 'soldier' },
+    };
+  }
+
+  @Post()
+  create(@Body() createUserDto: CreateUserDto) {
+    return {
+      message: 'Mock: User created successfully',
+      data: { id: 3, ...createUserDto },
     };
   }
 }
