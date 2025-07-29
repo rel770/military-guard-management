@@ -37,4 +37,8 @@ export class ShiftsService {
       createdAt: new Date(),
     },
   ];
+
+  findAll(): Shift[] {
+    return this.shifts;
+  }
 }
