@@ -83,4 +83,13 @@ export class AssignmentsService {
     this.assignments[assignmentIndex].status = status;
     return this.assignments[assignmentIndex];
   }
+
+  delete(id: number): void {
+    const assignmentIndex = this.assignments.findIndex((a) => a.id === id);
+    if (assignmentIndex === -1) {
+      throw new NotFoundException(`Assignment with ID ${id} not found`);
+    }
+
+    this.assignments.splice(assignmentIndex, 1);
+  }
 }
