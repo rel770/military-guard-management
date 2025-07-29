@@ -72,4 +72,9 @@ export class UsersService {
     const { password, ...userWithoutPassword } = newUser;
     return userWithoutPassword;
   }
+
+  // Helper method for authentication
+  findUserForAuth(email: string): User | null {
+    return this.users.find((u) => u.email === email) || null;
+  }
 }
