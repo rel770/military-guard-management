@@ -31,9 +31,10 @@ export class UsersController {
 
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
+    const newUser = this.usersService.create(createUserDto);
     return {
-      message: 'Mock: User created successfully',
-      data: { id: 3, ...createUserDto },
+      message: 'User created successfully',
+      data: newUser,
     };
   }
 }
