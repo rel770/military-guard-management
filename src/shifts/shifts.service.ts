@@ -49,4 +49,15 @@ export class ShiftsService {
     }
     return shift;
   }
+
+  create(shiftData: Omit<Shift, 'id' | 'createdAt'>): Shift {
+    const newShift: Shift = {
+      id: this.shifts.length + 1,
+      ...shiftData,
+      createdAt: new Date(),
+    };
+
+    this.shifts.push(newShift);
+    return newShift;
+  }
 }
