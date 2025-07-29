@@ -38,15 +38,15 @@ export class AssignmentsController {
       data: assignments,
     };
   }
-      message: `Mock: Get assignments for user ${userId}`,
-      data: [
-        {
-          id: 1,
-          userId: parseInt(userId),
-          shiftId: 1,
-          shift: { location: 'Main Gate', startTime: '2025-07-28T08:00:00Z' },
-        },
-      ],
+
+  @Get('shift/:shiftId')
+  @UseGuards(RolesGuard)
+  @Roles(Role.COMMANDER)
+  findByShift(@Param('shiftId') shiftId: string) {
+    const assignments = this.assignmentsService.findByShiftId(+shiftId);
+    return {
+      message: 'Shift assignments retrieved successfully',
+      data: assignments,
     };
   }
 
