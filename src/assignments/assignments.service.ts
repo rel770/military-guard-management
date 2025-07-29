@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 interface Assignment {
   id: number;
@@ -40,5 +40,13 @@ export class AssignmentsService {
 
   findByShiftId(shiftId: number): Assignment[] {
     return this.assignments.filter((a) => a.shiftId === shiftId);
+  }
+
+  findById(id: number): Assignment {
+    const assignment = this.assignments.find((a) => a.id === id);
+    if (!assignment) {
+      throw new NotFoundException(`Assignment with ID ${id} not found`);
+    }
+    return assignment;
   }
 }
