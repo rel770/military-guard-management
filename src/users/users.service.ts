@@ -11,4 +11,23 @@ interface User {
 }
 
 @Injectable()
-export class UsersService {}
+export class UsersService {
+  private users: User[] = [
+    {
+      id: 1,
+      name: 'John Soldier',
+      email: 'soldier@domain.com',
+      password: 'hashedPassword123', // In the future, this will be a bcrypt hash
+      role: Role.SOLDIER,
+      createdAt: new Date(),
+    },
+    {
+      id: 2,
+      name: 'John Commander',
+      email: 'commander@domain.com',
+      password: 'hashedPassword456', // In the future, this will be a bcrypt hash
+      role: Role.COMMANDER,
+      createdAt: new Date(),
+    },
+  ];
+}
