@@ -1,50 +1,102 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { AssignmentsService } from './assignments.service';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { Role } from 'src/common/enums/role.enum';
 
 @Controller('assignments')
+@UseGuards(JwtAuthGuard)
 export class AssignmentsController {
+  constructor(private readonly assignmentsService: AssignmentsService) {}
+
   @Get()
-  findAll() {
+  findAll(@Request() req) {
+    // Use role-based filtering
+    const assignments = this.assignmentsService.findAssignmentsForUser(
+      req.user.userId,
+      req.user.role,
+    );
     return {
-      message: 'Mock: Get all assignments',
-      data: [
-        {
-          id: 1,
-          userId: 1,
-          shiftId: 1,
-          user: { name: 'John Soldier' },
-          shift: { location: 'Main Gate', startTime: '2025-07-28T08:00:00Z' },
-        },
-        {
-          id: 2,
-          userId: 2,
-          shiftId: 2,
-          user: { name: 'Jane Commander' },
-          shift: { location: 'Perimeter', startTime: '2025-07-28T16:00:00Z' },
-        },
-      ],
+      message: 'Assignments retrieved successfully',
+      data: assignments,
     };
   }
 
   @Get('user/:userId')
+  @UseGuards(RolesGuard)
+  @Roles(Role.COMMANDER)
   findByUser(@Param('userId') userId: string) {
+    const assignments = this.assignmentsService.findByUserId(+userId);
     return {
-      message: `Mock: Get assignments for user ${userId}`,
-      data: [
-        {
-          id: 1,
-          userId: parseInt(userId),
-          shiftId: 1,
-          shift: { location: 'Main Gate', startTime: '2025-07-28T08:00:00Z' },
-        },
-      ],
+      message: 'User assignments retrieved successfully',
+      data: assignments,
+    };
+  }
+
+  @Get('shift/:shiftId')
+  @UseGuards(RolesGuard)
+  @Roles(Role.COMMANDER)
+  findByShift(@Param('shiftId') shiftId: string) {
+    const assignments = this.assignmentsService.findByShiftId(+shiftId);
+    return {
+      message: 'Shift assignments retrieved successfully',
+      data: assignments,
     };
   }
 
   @Post()
-  create(@Body() createAssignmentDto: any) {
+  @UseGuards(RolesGuard)
+  @Roles(Role.COMMANDER)
+  create(
+    @Body() assignmentData: { userId: number; shiftId: number },
+    @Request() req,
+  ) {
+    const newAssignment = this.assignmentsService.create(
+      assignmentData.userId,
+      assignmentData.shiftId,
+      req.user.userId,
+    );
     return {
-      message: 'Mock: Assignment created successfully',
-      data: { id: 3, ...createAssignmentDto },
+      message: 'Assignment created successfully',
+      data: newAssignment,
+    };
+  }
+
+  @Put(':id/status')
+  @UseGuards(RolesGuard)
+  @Roles(Role.COMMANDER)
+  updateStatus(
+    @Param('id') id: string,
+    @Body() statusData: { status: string },
+  ) {
+    const updatedAssignment = this.assignmentsService.updateStatus(
+      +id,
+      statusData.status as any,
+    );
+    return {
+      message: 'Assignment status updated successfully',
+      data: updatedAssignment,
+    };
+  }
+
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.COMMANDER)
+  delete(@Param('id') id: string) {
+    this.assignmentsService.delete(+id);
+    return {
+      message: 'Assignment deleted successfully',
     };
   }
 }
