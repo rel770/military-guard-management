@@ -37,4 +37,8 @@ export class AssignmentsService {
   findByUserId(userId: number): Assignment[] {
     return this.assignments.filter((a) => a.userId === userId);
   }
+
+  findByShiftId(shiftId: number): Assignment[] {
+    return this.assignments.filter((a) => a.shiftId === shiftId);
+  }
 }
