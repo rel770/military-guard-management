@@ -1,6 +1,9 @@
 import { Controller, Get, Param, Post, Body, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { ShiftsService } from './shifts.service';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { Role } from 'src/common/enums/role.enum';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @Controller('shifts')
 @UseGuards(JwtAuthGuard)
@@ -25,10 +28,13 @@ export class ShiftsController {
   }
 
   @Post()
-  create(@Body() createShiftDto: any) {
+  @UseGuards(RolesGuard)
+  @Roles(Role.COMMANDER)
+  create(@Body() shiftData: any) {
+    const newShift = this.shiftsService.create(shiftData);
     return {
-      message: 'Mock: Shift created successfully',
-      data: { id: 3, ...createShiftDto },
+      message: 'Shift created successfully',
+      data: newShift,
     };
   }
 }
