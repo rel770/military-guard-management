@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { Role } from 'src/common/enums/role.enum';
+import { Role } from '../common/enums/role.enum';
 
-interface Assignment {
+export interface Assignment {
   id: number;
   userId: number;
   shiftId: number;
