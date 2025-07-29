@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
-interface Shift {
+export interface Shift {
   id: number;
   startTime: Date;
   endTime: Date;
