@@ -6,7 +6,7 @@ import {
 import { Role } from '../common/enums/role.enum';
 import { CreateUserDto } from './dto/create-user.dto';
 
-interface User {
+export interface User {
   id: number;
   name: string;
   email: string;
