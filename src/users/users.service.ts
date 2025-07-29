@@ -30,4 +30,8 @@ export class UsersService {
       createdAt: new Date(),
     },
   ];
+
+  findAll(): Omit<User, 'password'>[] {
+    return this.users.map(({ password, ...user }) => user);
+  }
 }
