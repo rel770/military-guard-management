@@ -1,4 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Role } from 'src/common/enums/role.enum';
 
 interface Assignment {
   id: number;
@@ -91,5 +92,16 @@ export class AssignmentsService {
     }
 
     this.assignments.splice(assignmentIndex, 1);
+  }
+
+  // Helper method to get assignments with user role filtering
+  findAssignmentsForUser(userId: number, userRole: Role): Assignment[] {
+    if (userRole === Role.COMMANDER) {
+      // Commanders can see all assignments
+      return this.assignments;
+    } else {
+      // Soldiers can only see their own assignments
+      return this.assignments.filter((a) => a.userId === userId);
+    }
   }
 }
