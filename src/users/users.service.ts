@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Role } from '../common/enums/role.enum';
 
 interface User {
@@ -33,5 +33,14 @@ export class UsersService {
 
   findAll(): Omit<User, 'password'>[] {
     return this.users.map(({ password, ...user }) => user);
+  }
+
+  findById(id: number): Omit<User, 'password'> | null {
+    const user = this.users.find((u) => u.id === id);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    const { password, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
 }
