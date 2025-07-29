@@ -30,6 +30,7 @@ export class UsersController {
   }
 
   @Post()
+  @Roles(Role.COMMANDER)
   create(@Body() createUserDto: CreateUserDto) {
     const newUser = this.usersService.create(createUserDto);
     return {
