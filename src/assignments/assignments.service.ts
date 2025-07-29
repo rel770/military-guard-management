@@ -73,4 +73,14 @@ export class AssignmentsService {
     this.assignments.push(newAssignment);
     return newAssignment;
   }
+
+  updateStatus(id: number, status: Assignment['status']): Assignment {
+    const assignmentIndex = this.assignments.findIndex((a) => a.id === id);
+    if (assignmentIndex === -1) {
+      throw new NotFoundException(`Assignment with ID ${id} not found`);
+    }
+
+    this.assignments[assignmentIndex].status = status;
+    return this.assignments[assignmentIndex];
+  }
 }
