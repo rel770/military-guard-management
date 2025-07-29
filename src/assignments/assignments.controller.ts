@@ -1,9 +1,12 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { AssignmentsService } from './assignments.service';
 
 @Controller('assignments')
 @UseGuards(JwtAuthGuard)
 export class AssignmentsController {
+  constructor(private readonly assignmentsService: AssignmentsService) {}
+
   @Get()
   findAll() {
     return {
