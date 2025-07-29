@@ -1,5 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Role } from '../common/enums/role.enum';
+import { CreateUserDto } from './dto/create-user.dto';
 
 interface User {
   id: number;
@@ -46,5 +51,25 @@ export class UsersService {
 
   findByEmail(email: string): User | null {
     return this.users.find((u) => u.email === email) || null;
+  }
+
+  create(createUserDto: CreateUserDto): Omit<User, 'password'> {
+    // Check if user already exists
+    if (this.findByEmail(createUserDto.email)) {
+      throw new ConflictException('User with this email already exists');
+    }
+
+    const newUser: User = {
+      id: this.users.length + 1,
+      name: createUserDto.name,
+      email: createUserDto.email,
+      password: createUserDto.password,
+      role: createUserDto.role as Role,
+      createdAt: new Date(),
+    };
+
+    this.users.push(newUser);
+    const { password, ...userWithoutPassword } = newUser;
+    return userWithoutPassword;
   }
 }
