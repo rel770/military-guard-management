@@ -67,8 +67,21 @@ export class AssignmentsController {
       data: newAssignment,
     };
   }
-      message: 'Mock: Assignment created successfully',
-      data: { id: 3, ...createAssignmentDto },
+
+  @Put(':id/status')
+  @UseGuards(RolesGuard)
+  @Roles(Role.COMMANDER)
+  updateStatus(
+    @Param('id') id: string,
+    @Body() statusData: { status: string },
+  ) {
+    const updatedAssignment = this.assignmentsService.updateStatus(
+      +id,
+      statusData.status as any,
+    );
+    return {
+      message: 'Assignment status updated successfully',
+      data: updatedAssignment,
     };
   }
 }
