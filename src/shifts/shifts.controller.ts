@@ -17,14 +17,10 @@ export class ShiftsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
+    const shift = this.shiftsService.findById(+id);
     return {
-      message: `Mock: Get shift ${id}`,
-      data: {
-        id: parseInt(id),
-        startTime: '2025-07-28T08:00:00Z',
-        endTime: '2025-07-28T16:00:00Z',
-        location: 'Main Gate',
-      },
+      message: 'Shift retrieved successfully',
+      data: shift,
     };
   }
 
