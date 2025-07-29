@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
@@ -21,10 +21,11 @@ export class UsersController {
   }
 
   @Get('profile')
-  getProfile() {
+  getProfile(@Request() req) {
+    const user = this.usersService.findById(req.user.userId);
     return {
-      message: 'Mock: Get user profile',
-      data: { id: 1, name: 'Current User', role: 'soldier' },
+      message: 'User profile retrieved successfully',
+      data: user,
     };
   }
 
