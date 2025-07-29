@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 
 interface Assignment {
   id: number;
@@ -48,5 +48,29 @@ export class AssignmentsService {
       throw new NotFoundException(`Assignment with ID ${id} not found`);
     }
     return assignment;
+  }
+
+  create(userId: number, shiftId: number, assignedBy: number): Assignment {
+    // Check if user is already assigned to this shift
+    const existingAssignment = this.assignments.find(
+      (a) =>
+        a.userId === userId && a.shiftId === shiftId && a.status === 'assigned',
+    );
+
+    if (existingAssignment) {
+      throw new ConflictException('User is already assigned to this shift');
+    }
+
+    const newAssignment: Assignment = {
+      id: this.assignments.length + 1,
+      userId,
+      shiftId,
+      status: 'assigned',
+      assignedAt: new Date(),
+      assignedBy,
+    };
+
+    this.assignments.push(newAssignment);
+    return newAssignment;
   }
 }
