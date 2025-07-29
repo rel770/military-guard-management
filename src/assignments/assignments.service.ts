@@ -29,4 +29,8 @@ export class AssignmentsService {
       assignedBy: 2, // John Commander
     },
   ];
+
+  findAll(): Assignment[] {
+    return this.assignments;
+  }
 }
