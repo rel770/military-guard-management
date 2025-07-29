@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 interface Shift {
   id: number;
@@ -40,5 +40,13 @@ export class ShiftsService {
 
   findAll(): Shift[] {
     return this.shifts;
+  }
+
+  findById(id: number): Shift {
+    const shift = this.shifts.find(s => s.id === id);
+    if (!shift) {
+      throw new NotFoundException(`Shift with ID ${id} not found`);
+    }
+    return shift;
   }
 }
