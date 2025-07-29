@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AssignmentsService } from './assignments.service';
 
@@ -8,25 +16,15 @@ export class AssignmentsController {
   constructor(private readonly assignmentsService: AssignmentsService) {}
 
   @Get()
-  findAll() {
+  findAll(@Request() req) {
+    // Use role-based filtering
+    const assignments = this.assignmentsService.findAssignmentsForUser(
+      req.user.userId,
+      req.user.role,
+    );
     return {
-      message: 'Mock: Get all assignments',
-      data: [
-        {
-          id: 1,
-          userId: 1,
-          shiftId: 1,
-          user: { name: 'John Soldier' },
-          shift: { location: 'Main Gate', startTime: '2025-07-28T08:00:00Z' },
-        },
-        {
-          id: 2,
-          userId: 2,
-          shiftId: 2,
-          user: { name: 'Jane Commander' },
-          shift: { location: 'Perimeter', startTime: '2025-07-28T16:00:00Z' },
-        },
-      ],
+      message: 'Assignments retrieved successfully',
+      data: assignments,
     };
   }
 
