@@ -51,8 +51,22 @@ export class AssignmentsController {
   }
 
   @Post()
-  create(@Body() createAssignmentDto: any) {
+  @UseGuards(RolesGuard)
+  @Roles(Role.COMMANDER)
+  create(
+    @Body() assignmentData: { userId: number; shiftId: number },
+    @Request() req,
+  ) {
+    const newAssignment = this.assignmentsService.create(
+      assignmentData.userId,
+      assignmentData.shiftId,
+      req.user.userId,
+    );
     return {
+      message: 'Assignment created successfully',
+      data: newAssignment,
+    };
+  }
       message: 'Mock: Assignment created successfully',
       data: { id: 3, ...createAssignmentDto },
     };
