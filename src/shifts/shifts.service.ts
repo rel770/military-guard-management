@@ -70,4 +70,13 @@ export class ShiftsService {
     this.shifts[shiftIndex] = { ...this.shifts[shiftIndex], ...updateData };
     return this.shifts[shiftIndex];
   }
+
+  delete(id: number): void {
+    const shiftIndex = this.shifts.findIndex(s => s.id === id);
+    if (shiftIndex === -1) {
+      throw new NotFoundException(`Shift with ID ${id} not found`);
+    }
+
+    this.shifts.splice(shiftIndex, 1);
+  }
 }
