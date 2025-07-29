@@ -29,8 +29,15 @@ export class AssignmentsController {
   }
 
   @Get('user/:userId')
+  @UseGuards(RolesGuard)
+  @Roles(Role.COMMANDER)
   findByUser(@Param('userId') userId: string) {
+    const assignments = this.assignmentsService.findByUserId(+userId);
     return {
+      message: 'User assignments retrieved successfully',
+      data: assignments,
+    };
+  }
       message: `Mock: Get assignments for user ${userId}`,
       data: [
         {
