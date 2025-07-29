@@ -1,4 +1,13 @@
-import { Controller, Get, Param, Post, Body, UseGuards, Put } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  Body,
+  UseGuards,
+  Put,
+  Delete,
+} from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { ShiftsService } from './shifts.service';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -46,6 +55,16 @@ export class ShiftsController {
     return {
       message: 'Shift updated successfully',
       data: updatedShift,
+    };
+  }
+
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.COMMANDER)
+  delete(@Param('id') id: string) {
+    this.shiftsService.delete(+id);
+    return {
+      message: 'Shift deleted successfully',
     };
   }
 }
