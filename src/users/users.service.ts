@@ -43,4 +43,8 @@ export class UsersService {
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
+
+  findByEmail(email: string): User | null {
+    return this.users.find((u) => u.email === email) || null;
+  }
 }
