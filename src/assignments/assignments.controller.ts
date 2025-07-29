@@ -1,14 +1,19 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
+  Put,
   Request,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AssignmentsService } from './assignments.service';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { Role } from 'src/common/enums/role.enum';
 
 @Controller('assignments')
 @UseGuards(JwtAuthGuard)
@@ -82,6 +87,16 @@ export class AssignmentsController {
     return {
       message: 'Assignment status updated successfully',
       data: updatedAssignment,
+    };
+  }
+
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.COMMANDER)
+  delete(@Param('id') id: string) {
+    this.assignmentsService.delete(+id);
+    return {
+      message: 'Assignment deleted successfully',
     };
   }
 }
