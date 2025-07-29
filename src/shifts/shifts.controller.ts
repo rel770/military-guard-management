@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body, UseGuards, Put } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { ShiftsService } from './shifts.service';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -35,6 +35,17 @@ export class ShiftsController {
     return {
       message: 'Shift created successfully',
       data: newShift,
+    };
+  }
+
+  @Put(':id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.COMMANDER)
+  update(@Param('id') id: string, @Body() updateData: any) {
+    const updatedShift = this.shiftsService.update(+id, updateData);
+    return {
+      message: 'Shift updated successfully',
+      data: updatedShift,
     };
   }
 }
