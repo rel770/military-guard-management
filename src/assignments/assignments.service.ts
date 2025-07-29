@@ -10,4 +10,23 @@ interface Assignment {
 }
 
 @Injectable()
-export class AssignmentsService {}
+export class AssignmentsService {
+  private assignments: Assignment[] = [
+    {
+      id: 1,
+      userId: 1, // John Soldier
+      shiftId: 1, // Main Gate morning shift
+      status: 'assigned',
+      assignedAt: new Date(),
+      assignedBy: 2, // John Commander
+    },
+    {
+      id: 2,
+      userId: 1, // John Soldier
+      shiftId: 2, // Perimeter afternoon shift
+      status: 'completed',
+      assignedAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // Yesterday
+      assignedBy: 2, // John Commander
+    },
+  ];
+}
