@@ -7,6 +7,11 @@ import { Assignment } from './entities/assignment.entity';
 export class AssignmentsService {
   constructor(private readonly databaseService: DatabaseService) {}
 
+  async findAll(): Promise<Assignment[]> {
+    const result = await this.databaseService.query(
+      'SELECT * FROM assignments ORDER BY assigned_at DESC'
+    );
+    return result.rows.map(row => Assignment.fromDatabase(row));
   }
 
   findByUserId(userId: number): Assignment[] {
