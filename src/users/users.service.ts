@@ -10,7 +10,7 @@ export class UsersService {
 
   async findAll(): Promise<User[]> {
     const result = await this.databaseService.query('SELECT * FROM users');
-    return result.map((row) => User.fromDatabase(row));
+    return result.rows.map((row) => User.fromDatabase(row));
   }
 
   async findById(id: number): Promise<User | null> {
@@ -18,7 +18,7 @@ export class UsersService {
       'SELECT * FROM users WHERE id = $1',
       [id],
     );
-    return result.length > 0 ? User.fromDatabase(result[0]) : null;
+    return result.rows.length > 0 ? User.fromDatabase(result.rows[0]) : null;
   }
 
   async findByEmail(email: string): Promise<User | null> {
@@ -26,7 +26,7 @@ export class UsersService {
       'SELECT * FROM users WHERE email = $1',
       [email],
     );
-    return result.length > 0 ? User.fromDatabase(result[0]) : null;
+    return result.rows.length > 0 ? User.fromDatabase(result.rows[0]) : null;
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -47,6 +47,6 @@ export class UsersService {
       [userData.name, userData.email, userData.password, userData.role],
     );
 
-    return User.fromDatabase(result[0]);
+    return User.fromDatabase(result.rows[0]);
   }
 }
