@@ -20,4 +20,14 @@ export interface UpdateShiftDto {
 export class ShiftsService {
   constructor(private readonly databaseService: DatabaseService) {}
 
+  async findAll(): Promise<Shift[]> {
+    try {
+      const query = 'SELECT * FROM shifts ORDER BY start_time ASC';
+      const result = await this.databaseService.query(query, []);
+      return result.rows.map(row => Shift.fromDatabase(row));
+    } catch (error) {
+      console.error('Database query error:', error);
+      throw error;
+    }
+  }
 }
