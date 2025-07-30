@@ -51,11 +51,11 @@ export class ShiftsController {
   @Put(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.COMMANDER)
-  update(@Param('id') id: string, @Body() updateData: any) {
-    const updatedShift = this.shiftsService.update(+id, updateData);
+  async update(@Param('id') id: string, @Body() updateData: UpdateShiftDto) {
+    const updatedShift = await this.shiftsService.update(+id, updateData);
     return {
       message: 'Shift updated successfully',
-      data: updatedShift,
+      data: updatedShift.toResponse(),
     };
   }
 
