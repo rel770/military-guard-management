@@ -14,6 +14,7 @@ import { AssignmentsService } from './assignments.service';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
+import { CreateAssignmentDto } from './dto/create-assignment.dto';
 
 @Controller('assignments')
 @UseGuards(JwtAuthGuard)
@@ -61,7 +62,7 @@ export class AssignmentsController {
   @UseGuards(RolesGuard)
   @Roles(Role.COMMANDER)
   async create(
-    @Body() assignmentData: { userId: number; shiftId: number },
+    @Body() assignmentData: CreateAssignmentDto,
     @Request() req,
   ) {
     const newAssignment = await this.assignmentsService.create(
