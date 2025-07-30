@@ -7,7 +7,13 @@ export interface CreateShiftDto {
   endTime: Date;
   location: string;
   description?: string;
-  createdAt: Date;
+}
+
+export interface UpdateShiftDto {
+  startTime?: Date;
+  endTime?: Date;
+  location?: string;
+  description?: string;
 }
 
 @Injectable()
