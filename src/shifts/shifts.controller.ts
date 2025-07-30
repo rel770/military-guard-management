@@ -62,8 +62,8 @@ export class ShiftsController {
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.COMMANDER)
-  delete(@Param('id') id: string) {
-    this.shiftsService.delete(+id);
+  async delete(@Param('id') id: string) {
+    await this.shiftsService.delete(+id);
     return {
       message: 'Shift deleted successfully',
     };
