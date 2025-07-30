@@ -40,11 +40,11 @@ export class ShiftsController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles(Role.COMMANDER)
-  create(@Body() shiftData: any) {
-    const newShift = this.shiftsService.create(shiftData);
+  async create(@Body() shiftData: CreateShiftDto) {
+    const newShift = await this.shiftsService.create(shiftData);
     return {
       message: 'Shift created successfully',
-      data: newShift,
+      data: newShift.toResponse(),
     };
   }
 
