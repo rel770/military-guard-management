@@ -66,7 +66,7 @@ export class AuthService {
 
   async validateUser(payload: any) {
     // This method will be used by JWT strategy
-    const user = this.usersService.findById(payload.sub);
+    const user = await this.usersService.findById(payload.sub);
     if (!user) {
       throw new UnauthorizedException();
     }
