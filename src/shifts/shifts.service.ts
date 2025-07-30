@@ -48,4 +48,35 @@ export class ShiftsService {
       console.error('Database query error:', error);
       throw error;
     }
-  }}
+  }
+
+  async create(shiftData: CreateShiftDto): Promise<Shift> {
+    try {
+      const shift = new Shift({
+        start_time: shiftData.startTime,
+        end_time: shiftData.endTime,
+        location: shiftData.location,
+        description: shiftData.description,
+      });
+
+      const dbData = shift.toDatabase();
+      const query = `
+        INSERT INTO shifts (start_time, end_time, location, description)
+        VALUES ($1, $2, $3, $4)
+        RETURNING *
+      `;
+      
+      const result = await this.databaseService.query(query, [
+        dbData.start_time,
+        dbData.end_time,
+        dbData.location,
+        dbData.description,
+      ]);
+      
+      return Shift.fromDatabase(result.rows[0]);
+    } catch (error) {
+      console.error('Database query error:', error);
+      throw error;
+    }
+  }
+}
