@@ -43,28 +43,23 @@ export class AssignmentsService {
     return Assignment.fromDatabase(result.rows[0]);
   }
 
-  create(userId: number, shiftId: number, assignedBy: number): Assignment {
+  async create(userId: number, shiftId: number, assignedBy: number): Promise<Assignment> {
     // Check if user is already assigned to this shift
-    const existingAssignment = this.assignments.find(
-      (a) =>
-        a.userId === userId && a.shiftId === shiftId && a.status === 'assigned',
+    const existingResult = await this.databaseService.query(
+      'SELECT * FROM assignments WHERE user_id = $1 AND shift_id = $2 AND status = $3',
+      [userId, shiftId, 'assigned']
     );
 
-    if (existingAssignment) {
+    if (existingResult.rows.length > 0) {
       throw new ConflictException('User is already assigned to this shift');
     }
 
-    const newAssignment: Assignment = {
-      id: this.assignments.length + 1,
-      userId,
-      shiftId,
-      status: 'assigned',
-      assignedAt: new Date(),
-      assignedBy,
-    };
+    const result = await this.databaseService.query(
+      'INSERT INTO assignments (user_id, shift_id, status, assigned_by) VALUES ($1, $2, $3, $4) RETURNING *',
+      [userId, shiftId, 'assigned', assignedBy]
+    );
 
-    this.assignments.push(newAssignment);
-    return newAssignment;
+    return Assignment.fromDatabase(result.rows[0]);
   }
 
   updateStatus(id: number, status: Assignment['status']): Assignment {
