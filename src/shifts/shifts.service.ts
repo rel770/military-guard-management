@@ -2,8 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { Shift } from './entities/shift.entity';
 
-export interface Shift {
-  id: number;
+export interface CreateShiftDto {
   startTime: Date;
   endTime: Date;
   location: string;
