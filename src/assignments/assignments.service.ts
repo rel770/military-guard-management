@@ -22,8 +22,12 @@ export class AssignmentsService {
     return result.rows.map(row => Assignment.fromDatabase(row));
   }
 
-  findByShiftId(shiftId: number): Assignment[] {
-    return this.assignments.filter((a) => a.shiftId === shiftId);
+  async findByShiftId(shiftId: number): Promise<Assignment[]> {
+    const result = await this.databaseService.query(
+      'SELECT * FROM assignments WHERE shift_id = $1 ORDER BY assigned_at DESC',
+      [shiftId]
+    );
+    return result.rows.map(row => Assignment.fromDatabase(row));
   }
 
   findById(id: number): Assignment {
