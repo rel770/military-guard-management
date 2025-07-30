@@ -21,80 +21,82 @@ export class AssignmentsController {
   constructor(private readonly assignmentsService: AssignmentsService) {}
 
   @Get()
-  findAll(@Request() req) {
+  async findAll(@Request() req) {
     // Use role-based filtering
-    const assignments = this.assignmentsService.findAssignmentsForUser(
+    const assignments = await this.assignmentsService.findAssignmentsForUser(
       req.user.userId,
       req.user.role,
     );
+    
+    // Convert to API response format
     return {
       message: 'Assignments retrieved successfully',
-      data: assignments,
+      data: assignments.map(assignment => assignment.toResponse()),
     };
   }
 
   @Get('user/:userId')
   @UseGuards(RolesGuard)
   @Roles(Role.COMMANDER)
-  findByUser(@Param('userId') userId: string) {
-    const assignments = this.assignmentsService.findByUserId(+userId);
+  async findByUser(@Param('userId') userId: string) {
+    const assignments = await this.assignmentsService.findByUserId(+userId);
     return {
       message: 'User assignments retrieved successfully',
-      data: assignments,
+      data: assignments.map(assignment => assignment.toResponse()),
     };
   }
 
   @Get('shift/:shiftId')
   @UseGuards(RolesGuard)
   @Roles(Role.COMMANDER)
-  findByShift(@Param('shiftId') shiftId: string) {
-    const assignments = this.assignmentsService.findByShiftId(+shiftId);
+  async findByShift(@Param('shiftId') shiftId: string) {
+    const assignments = await this.assignmentsService.findByShiftId(+shiftId);
     return {
       message: 'Shift assignments retrieved successfully',
-      data: assignments,
+      data: assignments.map(assignment => assignment.toResponse()),
     };
   }
 
   @Post()
   @UseGuards(RolesGuard)
   @Roles(Role.COMMANDER)
-  create(
+  async create(
     @Body() assignmentData: { userId: number; shiftId: number },
     @Request() req,
   ) {
-    const newAssignment = this.assignmentsService.create(
+    const newAssignment = await this.assignmentsService.create(
       assignmentData.userId,
       assignmentData.shiftId,
       req.user.userId,
     );
     return {
       message: 'Assignment created successfully',
-      data: newAssignment,
+      data: newAssignment.toResponse(),
     };
   }
 
   @Put(':id/status')
   @UseGuards(RolesGuard)
   @Roles(Role.COMMANDER)
-  updateStatus(
+  async updateStatus(
     @Param('id') id: string,
     @Body() statusData: { status: string },
   ) {
-    const updatedAssignment = this.assignmentsService.updateStatus(
+    const updatedAssignment = await this.assignmentsService.updateStatus(
       +id,
       statusData.status as any,
     );
     return {
       message: 'Assignment status updated successfully',
-      data: updatedAssignment,
+      data: updatedAssignment.toResponse(),
     };
   }
 
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.COMMANDER)
-  delete(@Param('id') id: string) {
-    this.assignmentsService.delete(+id);
+  async delete(@Param('id') id: string) {
+    await this.assignmentsService.delete(+id);
     return {
       message: 'Assignment deleted successfully',
     };

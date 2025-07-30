@@ -1,107 +1,99 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Role } from '../common/enums/role.enum';
-
-export interface Assignment {
-  id: number;
-  userId: number;
-  shiftId: number;
-  status: 'assigned' | 'completed' | 'cancelled';
-  assignedAt: Date;
-  assignedBy: number; // ID of the commander who made the assignment
-}
+import { DatabaseService } from '../database/database.service';
+import { Assignment } from './entities/assignment.entity';
 
 @Injectable()
 export class AssignmentsService {
-  private assignments: Assignment[] = [
-    {
-      id: 1,
-      userId: 1, // John Soldier
-      shiftId: 1, // Main Gate morning shift
-      status: 'assigned',
-      assignedAt: new Date(),
-      assignedBy: 2, // John Commander
-    },
-    {
-      id: 2,
-      userId: 1, // John Soldier
-      shiftId: 2, // Perimeter afternoon shift
-      status: 'completed',
-      assignedAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // Yesterday
-      assignedBy: 2, // John Commander
-    },
-  ];
+  constructor(private readonly databaseService: DatabaseService) {}
 
-  findAll(): Assignment[] {
-    return this.assignments;
+  async findAll(): Promise<Assignment[]> {
+    const result = await this.databaseService.query(
+      'SELECT * FROM assignments ORDER BY assigned_at DESC'
+    );
+    return result.rows.map(row => Assignment.fromDatabase(row));
   }
 
-  findByUserId(userId: number): Assignment[] {
-    return this.assignments.filter((a) => a.userId === userId);
+  async findByUserId(userId: number): Promise<Assignment[]> {
+    const result = await this.databaseService.query(
+      'SELECT * FROM assignments WHERE user_id = $1 ORDER BY assigned_at DESC',
+      [userId]
+    );
+    return result.rows.map(row => Assignment.fromDatabase(row));
   }
 
-  findByShiftId(shiftId: number): Assignment[] {
-    return this.assignments.filter((a) => a.shiftId === shiftId);
+  async findByShiftId(shiftId: number): Promise<Assignment[]> {
+    const result = await this.databaseService.query(
+      'SELECT * FROM assignments WHERE shift_id = $1 ORDER BY assigned_at DESC',
+      [shiftId]
+    );
+    return result.rows.map(row => Assignment.fromDatabase(row));
   }
 
-  findById(id: number): Assignment {
-    const assignment = this.assignments.find((a) => a.id === id);
-    if (!assignment) {
+  async findById(id: number): Promise<Assignment> {
+    const result = await this.databaseService.query(
+      'SELECT * FROM assignments WHERE id = $1',
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
       throw new NotFoundException(`Assignment with ID ${id} not found`);
     }
-    return assignment;
+    
+    return Assignment.fromDatabase(result.rows[0]);
   }
 
-  create(userId: number, shiftId: number, assignedBy: number): Assignment {
+  async create(userId: number, shiftId: number, assignedBy: number): Promise<Assignment> {
     // Check if user is already assigned to this shift
-    const existingAssignment = this.assignments.find(
-      (a) =>
-        a.userId === userId && a.shiftId === shiftId && a.status === 'assigned',
+    const existingResult = await this.databaseService.query(
+      'SELECT * FROM assignments WHERE user_id = $1 AND shift_id = $2 AND status = $3',
+      [userId, shiftId, 'assigned']
     );
 
-    if (existingAssignment) {
+    if (existingResult.rows.length > 0) {
       throw new ConflictException('User is already assigned to this shift');
     }
 
-    const newAssignment: Assignment = {
-      id: this.assignments.length + 1,
-      userId,
-      shiftId,
-      status: 'assigned',
-      assignedAt: new Date(),
-      assignedBy,
-    };
+    const result = await this.databaseService.query(
+      'INSERT INTO assignments (user_id, shift_id, status, assigned_by) VALUES ($1, $2, $3, $4) RETURNING *',
+      [userId, shiftId, 'assigned', assignedBy]
+    );
 
-    this.assignments.push(newAssignment);
-    return newAssignment;
+    return Assignment.fromDatabase(result.rows[0]);
   }
 
-  updateStatus(id: number, status: Assignment['status']): Assignment {
-    const assignmentIndex = this.assignments.findIndex((a) => a.id === id);
-    if (assignmentIndex === -1) {
+  async updateStatus(id: number, status: 'assigned' | 'completed' | 'cancelled'): Promise<Assignment> {
+    const result = await this.databaseService.query(
+      'UPDATE assignments SET status = $1 WHERE id = $2 RETURNING *',
+      [status, id]
+    );
+
+    if (result.rows.length === 0) {
       throw new NotFoundException(`Assignment with ID ${id} not found`);
     }
 
-    this.assignments[assignmentIndex].status = status;
-    return this.assignments[assignmentIndex];
+    return Assignment.fromDatabase(result.rows[0]);
   }
 
-  delete(id: number): void {
-    const assignmentIndex = this.assignments.findIndex((a) => a.id === id);
-    if (assignmentIndex === -1) {
+  async delete(id: number): Promise<void> {
+    const result = await this.databaseService.query(
+      'DELETE FROM assignments WHERE id = $1 RETURNING id',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
       throw new NotFoundException(`Assignment with ID ${id} not found`);
     }
-
-    this.assignments.splice(assignmentIndex, 1);
   }
 
   // Helper method to get assignments with user role filtering
-  findAssignmentsForUser(userId: number, userRole: Role): Assignment[] {
+  async findAssignmentsForUser(userId: number, userRole: Role): Promise<Assignment[]> {
     if (userRole === Role.COMMANDER) {
       // Commanders can see all assignments
-      return this.assignments;
+      return this.findAll();
     } else {
       // Soldiers can only see their own assignments
-      return this.assignments.filter((a) => a.userId === userId);
+      return this.findByUserId(userId);
     }
   }
 }
