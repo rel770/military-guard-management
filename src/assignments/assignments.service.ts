@@ -14,8 +14,12 @@ export class AssignmentsService {
     return result.rows.map(row => Assignment.fromDatabase(row));
   }
 
-  findByUserId(userId: number): Assignment[] {
-    return this.assignments.filter((a) => a.userId === userId);
+  async findByUserId(userId: number): Promise<Assignment[]> {
+    const result = await this.databaseService.query(
+      'SELECT * FROM assignments WHERE user_id = $1 ORDER BY assigned_at DESC',
+      [userId]
+    );
+    return result.rows.map(row => Assignment.fromDatabase(row));
   }
 
   findByShiftId(shiftId: number): Assignment[] {
