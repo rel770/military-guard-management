@@ -19,7 +19,8 @@ export class DatabaseService {
   async query(sqlQuery: string, params?: any[]) {
     try {
       const result = await this.sql.query(sqlQuery, params);
-      return result;
+      console.log('Database query result:', result);
+      return { rows: result };
     } catch (error) {
       console.error('Database query error:', error);
       throw error;
