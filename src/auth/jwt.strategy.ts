@@ -2,7 +2,7 @@
  * JWT Strategy for Authentication
  * This strategy extracts the JWT token from the request and validates it.
  * It uses the Passport library to handle JWT authentication.
- * The validate method checks the payload and returns user information.
+ * The validate method checks the payload and returns user information from the database.
  * If the token is invalid or expired, it throws an UnauthorizedException.
  * 
  * This strategy is used in conjunction with the `JwtAuthGuard` to protect routes.
@@ -31,18 +31,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    // In stage 2, we'll use mock data validation
-    // Later in stage 3, this will query the database
-    const user = {
-      userId: payload.sub,  // sub means subject. standard field in JWT (RFC 7519)
-      email: payload.email,
-      role: payload.role,
-    };
-
+    // Query the database to get the actual user
+    const user = await this.usersService.findById(payload.sub);
+    
     if (!user) {
       throw new UnauthorizedException();
     }
 
-    return user;
+    // Return user info that will be attached to request.user
+    return {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    };
   }
 }
