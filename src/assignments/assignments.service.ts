@@ -30,12 +30,17 @@ export class AssignmentsService {
     return result.rows.map(row => Assignment.fromDatabase(row));
   }
 
-  findById(id: number): Assignment {
-    const assignment = this.assignments.find((a) => a.id === id);
-    if (!assignment) {
+  async findById(id: number): Promise<Assignment> {
+    const result = await this.databaseService.query(
+      'SELECT * FROM assignments WHERE id = $1',
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
       throw new NotFoundException(`Assignment with ID ${id} not found`);
     }
-    return assignment;
+    
+    return Assignment.fromDatabase(result.rows[0]);
   }
 
   create(userId: number, shiftId: number, assignedBy: number): Assignment {
