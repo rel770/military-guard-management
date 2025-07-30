@@ -1,80 +1,52 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { Role } from '../common/enums/role.enum';
+import { Injectable } from '@nestjs/common';
+import { DatabaseService } from '../database/database.service';
+import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-  password: string;
-  role: Role;
-  createdAt: Date;
-}
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
-  private users: User[] = [
-    {
-      id: 1,
-      name: 'John Soldier',
-      email: 'soldier@domain.com',
-      password: 'hashedPassword123', // In the future, this will be a bcrypt hash
-      role: Role.SOLDIER,
-      createdAt: new Date(),
-    },
-    {
-      id: 2,
-      name: 'John Commander',
-      email: 'commander@domain.com',
-      password: 'hashedPassword456', // In the future, this will be a bcrypt hash
-      role: Role.COMMANDER,
-      createdAt: new Date(),
-    },
-  ];
+  constructor(private databaseService: DatabaseService) {}
 
-  findAll(): Omit<User, 'password'>[] {
-    return this.users.map(({ password, ...user }) => user);
+  async findAll(): Promise<User[]> {
+    const result = await this.databaseService.query('SELECT * FROM users');
+    return result.map((row) => User.fromDatabase(row));
   }
 
-  findById(id: number): Omit<User, 'password'> | null {
-    const user = this.users.find((u) => u.id === id);
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
-    const { password, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+  async findById(id: number): Promise<User | null> {
+    const result = await this.databaseService.query(
+      'SELECT * FROM users WHERE id = $1',
+      [id],
+    );
+    return result.length > 0 ? User.fromDatabase(result[0]) : null;
   }
 
-  findByEmail(email: string): User | null {
-    return this.users.find((u) => u.email === email) || null;
+  async findByEmail(email: string): Promise<User | null> {
+    const result = await this.databaseService.query(
+      'SELECT * FROM users WHERE email = $1',
+      [email],
+    );
+    return result.length > 0 ? User.fromDatabase(result[0]) : null;
   }
 
-  create(createUserDto: CreateUserDto): Omit<User, 'password'> {
-    // Check if user already exists
-    if (this.findByEmail(createUserDto.email)) {
-      throw new ConflictException('User with this email already exists');
-    }
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
-    const newUser: User = {
-      id: this.users.length + 1,
+    const user = new User({
       name: createUserDto.name,
       email: createUserDto.email,
-      password: createUserDto.password,
-      role: createUserDto.role as Role,
-      createdAt: new Date(),
-    };
+      password: hashedPassword,
+      role: createUserDto.role,
+    });
 
-    this.users.push(newUser);
-    const { password, ...userWithoutPassword } = newUser;
-    return userWithoutPassword;
-  }
+    const userData = user.toDatabase();
 
-  // Helper method for authentication
-  findUserForAuth(email: string): User | null {
-    return this.users.find((u) => u.email === email) || null;
+    const result = await this.databaseService.query(
+      `INSERT INTO users (name, email, password, role) 
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [userData.name, userData.email, userData.password, userData.role],
+    );
+
+    return User.fromDatabase(result[0]);
   }
 }

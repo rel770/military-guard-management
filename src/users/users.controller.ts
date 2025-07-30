@@ -1,10 +1,10 @@
 import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { UsersService } from './users.service';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { Role } from 'src/common/enums/role.enum';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../common/enums/role.enum';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -13,16 +13,16 @@ export class UsersController {
 
   @Get()
   @Roles(Role.COMMANDER)
-  findAll() {
+  async findAll() {
     return {
       message: 'All users retrieved successfully',
-      data: this.usersService.findAll(),
+      data: await this.usersService.findAll(),
     };
   }
 
   @Get('profile')
-  getProfile(@Request() req) {
-    const user = this.usersService.findById(req.user.userId);
+  async getProfile(@Request() req) {
+    const user = await this.usersService.findById(req.user.userId);
     return {
       message: 'User profile retrieved successfully',
       data: user,
@@ -31,8 +31,8 @@ export class UsersController {
 
   @Post()
   @Roles(Role.COMMANDER)
-  create(@Body() createUserDto: CreateUserDto) {
-    const newUser = this.usersService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    const newUser = await this.usersService.create(createUserDto);
     return {
       message: 'User created successfully',
       data: newUser,
