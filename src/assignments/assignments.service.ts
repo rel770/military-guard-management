@@ -87,13 +87,13 @@ export class AssignmentsService {
   }
 
   // Helper method to get assignments with user role filtering
-  findAssignmentsForUser(userId: number, userRole: Role): Assignment[] {
+  async findAssignmentsForUser(userId: number, userRole: Role): Promise<Assignment[]> {
     if (userRole === Role.COMMANDER) {
       // Commanders can see all assignments
-      return this.assignments;
+      return this.findAll();
     } else {
       // Soldiers can only see their own assignments
-      return this.assignments.filter((a) => a.userId === userId);
+      return this.findByUserId(userId);
     }
   }
 }
