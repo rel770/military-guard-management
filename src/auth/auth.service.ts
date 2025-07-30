@@ -43,19 +43,13 @@ export class AuthService {
 
   async register(registerDto: RegisterDto) {
     // Check if user already exists
-    if (this.usersService.findByEmail(registerDto.email)) {
+    const existingUser = await this.usersService.findByEmail(registerDto.email);
+    if (existingUser) {
       throw new ConflictException('User with this email already exists');
     }
 
-    // Hash password
-    const saltRounds = process.env.BCRYPT_SALT_ROUNDS || 10;
-    const hashedPassword = await bcrypt.hash(registerDto.password, saltRounds);
-
-    // Create user
-    const newUser = this.usersService.create({
-      ...registerDto,
-      password: hashedPassword,
-    });
+    // Create user (password will be hashed in service)
+    const newUser = await this.usersService.create(registerDto);
 
     // Generate JWT token
     const payload = {
@@ -66,7 +60,7 @@ export class AuthService {
 
     return {
       access_token: this.jwtService.sign(payload),
-      user: newUser,
+      user: newUser.toSafeObject(),
     };
   }
 
