@@ -75,13 +75,15 @@ export class AssignmentsService {
     return Assignment.fromDatabase(result.rows[0]);
   }
 
-  delete(id: number): void {
-    const assignmentIndex = this.assignments.findIndex((a) => a.id === id);
-    if (assignmentIndex === -1) {
+  async delete(id: number): Promise<void> {
+    const result = await this.databaseService.query(
+      'DELETE FROM assignments WHERE id = $1 RETURNING id',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
       throw new NotFoundException(`Assignment with ID ${id} not found`);
     }
-
-    this.assignments.splice(assignmentIndex, 1);
   }
 
   // Helper method to get assignments with user role filtering
