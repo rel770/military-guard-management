@@ -43,20 +43,42 @@ export class AssignmentsService {
     return Assignment.fromDatabase(result.rows[0]);
   }
 
-  async create(userId: number, shiftId: number, assignedBy: number): Promise<Assignment> {
+  async create(
+    userId: number,
+    shiftId: number,
+    assignedBy: number,
+  ): Promise<Assignment> {
+    // Verify user exists
+    const userCheck = await this.databaseService.query(
+      'SELECT id FROM users WHERE id = $1',
+      [userId],
+    );
+    if (userCheck.rows.length === 0) {
+      throw new NotFoundException(`User with ID ${userId} was not found`);
+    }
+
+    // Verify shift exists
+    const shiftCheck = await this.databaseService.query(
+      'SELECT id FROM shifts WHERE id = $1',
+      [shiftId],
+    );
+    if (shiftCheck.rows.length === 0) {
+      throw new NotFoundException(`Shift with ID ${shiftId} was not found`);
+    }
+
     // Check if user is already assigned to this shift
     const existingResult = await this.databaseService.query(
       'SELECT * FROM assignments WHERE user_id = $1 AND shift_id = $2 AND status = $3',
-      [userId, shiftId, 'assigned']
+      [userId, shiftId, 'assigned'],
     );
 
     if (existingResult.rows.length > 0) {
-      throw new ConflictException('User is already assigned to this shift');
+      throw new ConflictException('The user is already assigned to this shift');
     }
 
     const result = await this.databaseService.query(
       'INSERT INTO assignments (user_id, shift_id, status, assigned_by) VALUES ($1, $2, $3, $4) RETURNING *',
-      [userId, shiftId, 'assigned', assignedBy]
+      [userId, shiftId, 'assigned', assignedBy],
     );
 
     return Assignment.fromDatabase(result.rows[0]);
