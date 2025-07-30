@@ -79,4 +79,53 @@ export class ShiftsService {
       throw error;
     }
   }
+
+  async update(id: number, updateData: UpdateShiftDto): Promise<Shift> {
+    try {
+      // First check if shift exists
+      await this.findById(id);
+
+      const updateFields: string[] = [];
+      const updateValues: any[] = [];
+      let paramIndex = 1;
+
+      if (updateData.startTime !== undefined) {
+        updateFields.push(`start_time = $${paramIndex++}`);
+        updateValues.push(updateData.startTime);
+      }
+      if (updateData.endTime !== undefined) {
+        updateFields.push(`end_time = $${paramIndex++}`);
+        updateValues.push(updateData.endTime);
+      }
+      if (updateData.location !== undefined) {
+        updateFields.push(`location = $${paramIndex++}`);
+        updateValues.push(updateData.location);
+      }
+      if (updateData.description !== undefined) {
+        updateFields.push(`description = $${paramIndex++}`);
+        updateValues.push(updateData.description);
+      }
+
+      if (updateFields.length === 0) {
+        return this.findById(id);
+      }
+
+      updateValues.push(id);
+      const query = `
+        UPDATE shifts 
+        SET ${updateFields.join(', ')}
+        WHERE id = $${paramIndex}
+        RETURNING *
+      `;
+
+      const result = await this.databaseService.query(query, updateValues);
+      return Shift.fromDatabase(result.rows[0]);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Database query error:', error);
+      throw error;
+    }
+  }
 }
