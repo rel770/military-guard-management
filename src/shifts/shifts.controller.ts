@@ -8,11 +8,11 @@ import {
   Put,
   Delete,
 } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { ShiftsService } from './shifts.service';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { Role } from 'src/common/enums/role.enum';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ShiftsService, CreateShiftDto, UpdateShiftDto } from './shifts.service';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../common/enums/role.enum';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Controller('shifts')
 @UseGuards(JwtAuthGuard)
@@ -20,10 +20,11 @@ export class ShiftsController {
   constructor(private readonly shiftsService: ShiftsService) {}
 
   @Get()
-  findAll() {
+  async findAll() {
+    const shifts = await this.shiftsService.findAll();
     return {
       message: 'All shifts retrieved successfully',
-      data: this.shiftsService.findAll(),
+      data: shifts.map(shift => shift.toResponse()),
     };
   }
 
