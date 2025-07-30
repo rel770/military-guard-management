@@ -62,14 +62,17 @@ export class AssignmentsService {
     return Assignment.fromDatabase(result.rows[0]);
   }
 
-  updateStatus(id: number, status: Assignment['status']): Assignment {
-    const assignmentIndex = this.assignments.findIndex((a) => a.id === id);
-    if (assignmentIndex === -1) {
+  async updateStatus(id: number, status: 'assigned' | 'completed' | 'cancelled'): Promise<Assignment> {
+    const result = await this.databaseService.query(
+      'UPDATE assignments SET status = $1 WHERE id = $2 RETURNING *',
+      [status, id]
+    );
+
+    if (result.rows.length === 0) {
       throw new NotFoundException(`Assignment with ID ${id} not found`);
     }
 
-    this.assignments[assignmentIndex].status = status;
-    return this.assignments[assignmentIndex];
+    return Assignment.fromDatabase(result.rows[0]);
   }
 
   delete(id: number): void {
