@@ -29,28 +29,24 @@ export class UsersService {
     return result.length > 0 ? User.fromDatabase(result[0]) : null;
   }
 
-  create(createUserDto: CreateUserDto): Omit<User, 'password'> {
-    // Check if user already exists
-    if (this.findByEmail(createUserDto.email)) {
-      throw new ConflictException('User with this email already exists');
-    }
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
-    const newUser: User = {
-      id: this.users.length + 1,
+    const user = new User({
       name: createUserDto.name,
       email: createUserDto.email,
-      password: createUserDto.password,
-      role: createUserDto.role as Role,
-      createdAt: new Date(),
-    };
+      password: hashedPassword,
+      role: createUserDto.role,
+    });
 
-    this.users.push(newUser);
-    const { password, ...userWithoutPassword } = newUser;
-    return userWithoutPassword;
-  }
+    const userData = user.toDatabase();
 
-  // Helper method for authentication
-  findUserForAuth(email: string): User | null {
-    return this.users.find((u) => u.email === email) || null;
+    const result = await this.databaseService.query(
+      `INSERT INTO users (name, email, password, role) 
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [userData.name, userData.email, userData.password, userData.role],
+    );
+
+    return User.fromDatabase(result[0]);
   }
 }
