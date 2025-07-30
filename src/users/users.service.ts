@@ -21,8 +21,12 @@ export class UsersService {
     return result.length > 0 ? User.fromDatabase(result[0]) : null;
   }
 
-  findByEmail(email: string): User | null {
-    return this.users.find((u) => u.email === email) || null;
+  async findByEmail(email: string): Promise<User | null> {
+    const result = await this.databaseService.query(
+      'SELECT * FROM users WHERE email = $1',
+      [email],
+    );
+    return result.length > 0 ? User.fromDatabase(result[0]) : null;
   }
 
   create(createUserDto: CreateUserDto): Omit<User, 'password'> {
