@@ -128,4 +128,20 @@ export class ShiftsService {
       throw error;
     }
   }
+
+  async delete(id: number): Promise<void> {
+    try {
+      // First check if shift exists
+      await this.findById(id);
+
+      const query = 'DELETE FROM shifts WHERE id = $1';
+      await this.databaseService.query(query, [id]);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Database query error:', error);
+      throw error;
+    }
+  }
 }
