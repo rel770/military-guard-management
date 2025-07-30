@@ -8,11 +8,11 @@ import {
   Put,
   Delete,
 } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { ShiftsService } from './shifts.service';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { Role } from 'src/common/enums/role.enum';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ShiftsService, CreateShiftDto, UpdateShiftDto } from './shifts.service';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../common/enums/role.enum';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Controller('shifts')
 @UseGuards(JwtAuthGuard)
@@ -20,49 +20,50 @@ export class ShiftsController {
   constructor(private readonly shiftsService: ShiftsService) {}
 
   @Get()
-  findAll() {
+  async findAll() {
+    const shifts = await this.shiftsService.findAll();
     return {
       message: 'All shifts retrieved successfully',
-      data: this.shiftsService.findAll(),
+      data: shifts.map(shift => shift.toResponse()),
     };
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    const shift = this.shiftsService.findById(+id);
+  async findOne(@Param('id') id: string) {
+    const shift = await this.shiftsService.findById(+id);
     return {
       message: 'Shift retrieved successfully',
-      data: shift,
+      data: shift.toResponse(),
     };
   }
 
   @Post()
   @UseGuards(RolesGuard)
   @Roles(Role.COMMANDER)
-  create(@Body() shiftData: any) {
-    const newShift = this.shiftsService.create(shiftData);
+  async create(@Body() shiftData: CreateShiftDto) {
+    const newShift = await this.shiftsService.create(shiftData);
     return {
       message: 'Shift created successfully',
-      data: newShift,
+      data: newShift.toResponse(),
     };
   }
 
   @Put(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.COMMANDER)
-  update(@Param('id') id: string, @Body() updateData: any) {
-    const updatedShift = this.shiftsService.update(+id, updateData);
+  async update(@Param('id') id: string, @Body() updateData: UpdateShiftDto) {
+    const updatedShift = await this.shiftsService.update(+id, updateData);
     return {
       message: 'Shift updated successfully',
-      data: updatedShift,
+      data: updatedShift.toResponse(),
     };
   }
 
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.COMMANDER)
-  delete(@Param('id') id: string) {
-    this.shiftsService.delete(+id);
+  async delete(@Param('id') id: string) {
+    await this.shiftsService.delete(+id);
     return {
       message: 'Shift deleted successfully',
     };
