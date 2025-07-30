@@ -12,11 +12,13 @@ export class DatabaseService {
       throw new Error('DATABASE_URL environment variable is not set');
     }
     this.sql = neon(databaseUrl);
+    // Initialize tables when service is created
+    this.initializeTables().catch(console.error);
   }
 
-  async query(sql: string, params?: any[]) {
+  async query(sqlQuery: string, params?: any[]) {
     try {
-      const result = await this.sql(sql, params);
+      const result = await this.sql.query(sqlQuery, params);
       return result;
     } catch (error) {
       console.error('Database query error:', error);
@@ -28,7 +30,7 @@ export class DatabaseService {
   async initializeTables() {
     try {
       // Users table
-      await this.sql`
+      await this.query(`
         CREATE TABLE IF NOT EXISTS users (
           id SERIAL PRIMARY KEY,
           name VARCHAR(100) NOT NULL,
@@ -37,10 +39,10 @@ export class DatabaseService {
           role VARCHAR(20) NOT NULL CHECK (role IN ('soldier', 'commander')),
           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         )
-      `;
+      `);
 
       // Shifts table
-      await this.sql`
+      await this.query(`
         CREATE TABLE IF NOT EXISTS shifts (
           id SERIAL PRIMARY KEY,
           start_time TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -49,10 +51,10 @@ export class DatabaseService {
           description TEXT,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         )
-      `;
+      `);
 
       // Assignments table
-      await this.sql`
+      await this.query(`
         CREATE TABLE IF NOT EXISTS assignments (
           id SERIAL PRIMARY KEY,
           user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -61,7 +63,7 @@ export class DatabaseService {
           assigned_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
           assigned_by INTEGER NOT NULL REFERENCES users(id)
         )
-      `;
+      `);
 
       console.log('Database tables initialized successfully');
     } catch (error) {
