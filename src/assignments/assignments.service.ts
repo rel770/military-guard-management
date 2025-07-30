@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Role } from '../common/enums/role.enum';
 import { DatabaseService } from '../database/database.service';
 import { Assignment } from './entities/assignment.entity';
@@ -9,37 +13,37 @@ export class AssignmentsService {
 
   async findAll(): Promise<Assignment[]> {
     const result = await this.databaseService.query(
-      'SELECT * FROM assignments ORDER BY assigned_at DESC'
+      'SELECT * FROM assignments ORDER BY assigned_at DESC',
     );
-    return result.rows.map(row => Assignment.fromDatabase(row));
+    return result.rows.map((row) => Assignment.fromDatabase(row));
   }
 
   async findByUserId(userId: number): Promise<Assignment[]> {
     const result = await this.databaseService.query(
       'SELECT * FROM assignments WHERE user_id = $1 ORDER BY assigned_at DESC',
-      [userId]
+      [userId],
     );
-    return result.rows.map(row => Assignment.fromDatabase(row));
+    return result.rows.map((row) => Assignment.fromDatabase(row));
   }
 
   async findByShiftId(shiftId: number): Promise<Assignment[]> {
     const result = await this.databaseService.query(
       'SELECT * FROM assignments WHERE shift_id = $1 ORDER BY assigned_at DESC',
-      [shiftId]
+      [shiftId],
     );
-    return result.rows.map(row => Assignment.fromDatabase(row));
+    return result.rows.map((row) => Assignment.fromDatabase(row));
   }
 
   async findById(id: number): Promise<Assignment> {
     const result = await this.databaseService.query(
       'SELECT * FROM assignments WHERE id = $1',
-      [id]
+      [id],
     );
-    
+
     if (result.rows.length === 0) {
-      throw new NotFoundException(`Assignment with ID ${id} not found`);
+      throw new NotFoundException(`Assignment with ID ${id} was not found`);
     }
-    
+
     return Assignment.fromDatabase(result.rows[0]);
   }
 
@@ -84,14 +88,17 @@ export class AssignmentsService {
     return Assignment.fromDatabase(result.rows[0]);
   }
 
-  async updateStatus(id: number, status: 'assigned' | 'completed' | 'cancelled'): Promise<Assignment> {
+  async updateStatus(
+    id: number,
+    status: 'assigned' | 'completed' | 'cancelled',
+  ): Promise<Assignment> {
     const result = await this.databaseService.query(
       'UPDATE assignments SET status = $1 WHERE id = $2 RETURNING *',
-      [status, id]
+      [status, id],
     );
 
     if (result.rows.length === 0) {
-      throw new NotFoundException(`Assignment with ID ${id} not found`);
+      throw new NotFoundException(`Assignment with ID ${id} was not found`);
     }
 
     return Assignment.fromDatabase(result.rows[0]);
@@ -100,16 +107,19 @@ export class AssignmentsService {
   async delete(id: number): Promise<void> {
     const result = await this.databaseService.query(
       'DELETE FROM assignments WHERE id = $1 RETURNING id',
-      [id]
+      [id],
     );
 
     if (result.rows.length === 0) {
-      throw new NotFoundException(`Assignment with ID ${id} not found`);
+      throw new NotFoundException(`Assignment with ID ${id} was not found`);
     }
   }
 
   // Helper method to get assignments with user role filtering
-  async findAssignmentsForUser(userId: number, userRole: Role): Promise<Assignment[]> {
+  async findAssignmentsForUser(
+    userId: number,
+    userRole: Role,
+  ): Promise<Assignment[]> {
     if (userRole === Role.COMMANDER) {
       // Commanders can see all assignments
       return this.findAll();
