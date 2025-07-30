@@ -29,11 +29,11 @@ export class ShiftsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    const shift = this.shiftsService.findById(+id);
+  async findOne(@Param('id') id: string) {
+    const shift = await this.shiftsService.findById(+id);
     return {
       message: 'Shift retrieved successfully',
-      data: shift,
+      data: shift.toResponse(),
     };
   }
 
