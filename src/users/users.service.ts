@@ -13,13 +13,12 @@ export class UsersService {
     return result.map((row) => User.fromDatabase(row));
   }
 
-  findById(id: number): Omit<User, 'password'> | null {
-    const user = this.users.find((u) => u.id === id);
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
-    const { password, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+  async findById(id: number): Promise<User | null> {
+    const result = await this.databaseService.query(
+      'SELECT * FROM users WHERE id = $1',
+      [id],
+    );
+    return result.length > 0 ? User.fromDatabase(result[0]) : null;
   }
 
   findByEmail(email: string): User | null {
