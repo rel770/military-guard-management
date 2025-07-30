@@ -14,7 +14,7 @@ export class AuthService {
 
   async login(loginDto: LoginDto) {
     // Find user by email
-    const user = this.usersService.findUserForAuth(loginDto.email);
+    const user = await this.usersService.findByEmail(loginDto.email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -37,30 +37,19 @@ export class AuthService {
 
     return {
       access_token: this.jwtService.sign(payload),
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: user.toSafeObject(),
     };
   }
 
   async register(registerDto: RegisterDto) {
     // Check if user already exists
-    if (this.usersService.findByEmail(registerDto.email)) {
+    const existingUser = await this.usersService.findByEmail(registerDto.email);
+    if (existingUser) {
       throw new ConflictException('User with this email already exists');
     }
 
-    // Hash password
-    const saltRounds = process.env.BCRYPT_SALT_ROUNDS || 10;
-    const hashedPassword = await bcrypt.hash(registerDto.password, saltRounds);
-
-    // Create user
-    const newUser = this.usersService.create({
-      ...registerDto,
-      password: hashedPassword,
-    });
+    // Create user (password will be hashed in service)
+    const newUser = await this.usersService.create(registerDto);
 
     // Generate JWT token
     const payload = {
@@ -71,13 +60,13 @@ export class AuthService {
 
     return {
       access_token: this.jwtService.sign(payload),
-      user: newUser,
+      user: newUser.toSafeObject(),
     };
   }
 
   async validateUser(payload: any) {
     // This method will be used by JWT strategy
-    const user = this.usersService.findById(payload.sub);
+    const user = await this.usersService.findById(payload.sub);
     if (!user) {
       throw new UnauthorizedException();
     }

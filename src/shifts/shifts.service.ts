@@ -1,82 +1,147 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { DatabaseService } from '../database/database.service';
+import { Shift } from './entities/shift.entity';
 
-export interface Shift {
-  id: number;
+export interface CreateShiftDto {
   startTime: Date;
   endTime: Date;
   location: string;
   description?: string;
-  createdAt: Date;
+}
+
+export interface UpdateShiftDto {
+  startTime?: Date;
+  endTime?: Date;
+  location?: string;
+  description?: string;
 }
 
 @Injectable()
 export class ShiftsService {
-  private shifts: Shift[] = [
-    {
-      id: 1,
-      startTime: new Date('2025-01-30T06:00:00'),
-      endTime: new Date('2025-01-30T14:00:00'),
-      location: 'Main Gate',
-      description: 'Morning shift at main entrance',
-      createdAt: new Date(),
-    },
-    {
-      id: 2,
-      startTime: new Date('2025-01-30T14:00:00'),
-      endTime: new Date('2025-01-30T22:00:00'),
-      location: 'Perimeter',
-      description: 'Afternoon perimeter patrol',
-      createdAt: new Date(),
-    },
-    {
-      id: 3,
-      startTime: new Date('2025-01-30T22:00:00'),
-      endTime: new Date('2025-01-31T06:00:00'),
-      location: 'Control Room',
-      description: 'Night shift monitoring',
-      createdAt: new Date(),
-    },
-  ];
+  constructor(private readonly databaseService: DatabaseService) {}
 
-  findAll(): Shift[] {
-    return this.shifts;
-  }
-
-  findById(id: number): Shift {
-    const shift = this.shifts.find(s => s.id === id);
-    if (!shift) {
-      throw new NotFoundException(`Shift with ID ${id} not found`);
+  async findAll(): Promise<Shift[]> {
+    try {
+      const query = 'SELECT * FROM shifts ORDER BY start_time ASC';
+      const result = await this.databaseService.query(query, []);
+      return result.rows.map(row => Shift.fromDatabase(row));
+    } catch (error) {
+      console.error('Database query error:', error);
+      throw error;
     }
-    return shift;
   }
 
-  create(shiftData: Omit<Shift, 'id' | 'createdAt'>): Shift {
-    const newShift: Shift = {
-      id: this.shifts.length + 1,
-      ...shiftData,
-      createdAt: new Date(),
-    };
-
-    this.shifts.push(newShift);
-    return newShift;
-  }
-
-  update(id: number, updateData: Partial<Omit<Shift, 'id' | 'createdAt'>>): Shift {
-    const shiftIndex = this.shifts.findIndex(s => s.id === id);
-    if (shiftIndex === -1) {
-      throw new NotFoundException(`Shift with ID ${id} not found`);
+  async findById(id: number): Promise<Shift> {
+    try {
+      const query = 'SELECT * FROM shifts WHERE id = $1';
+      const result = await this.databaseService.query(query, [id]);
+      
+      if (result.rows.length === 0) {
+        throw new NotFoundException(`Shift with ID ${id} not found`);
+      }
+      
+      return Shift.fromDatabase(result.rows[0]);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Database query error:', error);
+      throw error;
     }
-
-    this.shifts[shiftIndex] = { ...this.shifts[shiftIndex], ...updateData };
-    return this.shifts[shiftIndex];
   }
 
-  delete(id: number): void {
-    const shiftIndex = this.shifts.findIndex(s => s.id === id);
-    if (shiftIndex === -1) {
-      throw new NotFoundException(`Shift with ID ${id} not found`);
-    }
+  async create(shiftData: CreateShiftDto): Promise<Shift> {
+    try {
+      const shift = new Shift({
+        start_time: shiftData.startTime,
+        end_time: shiftData.endTime,
+        location: shiftData.location,
+        description: shiftData.description,
+      });
 
-    this.shifts.splice(shiftIndex, 1);
+      const dbData = shift.toDatabase();
+      const query = `
+        INSERT INTO shifts (start_time, end_time, location, description)
+        VALUES ($1, $2, $3, $4)
+        RETURNING *
+      `;
+      
+      const result = await this.databaseService.query(query, [
+        dbData.start_time,
+        dbData.end_time,
+        dbData.location,
+        dbData.description,
+      ]);
+      
+      return Shift.fromDatabase(result.rows[0]);
+    } catch (error) {
+      console.error('Database query error:', error);
+      throw error;
+    }
+  }
+
+  async update(id: number, updateData: UpdateShiftDto): Promise<Shift> {
+    try {
+      // First check if shift exists
+      await this.findById(id);
+
+      const updateFields: string[] = [];
+      const updateValues: any[] = [];
+      let paramIndex = 1;
+
+      if (updateData.startTime !== undefined) {
+        updateFields.push(`start_time = $${paramIndex++}`);
+        updateValues.push(updateData.startTime);
+      }
+      if (updateData.endTime !== undefined) {
+        updateFields.push(`end_time = $${paramIndex++}`);
+        updateValues.push(updateData.endTime);
+      }
+      if (updateData.location !== undefined) {
+        updateFields.push(`location = $${paramIndex++}`);
+        updateValues.push(updateData.location);
+      }
+      if (updateData.description !== undefined) {
+        updateFields.push(`description = $${paramIndex++}`);
+        updateValues.push(updateData.description);
+      }
+
+      if (updateFields.length === 0) {
+        return this.findById(id);
+      }
+
+      updateValues.push(id);
+      const query = `
+        UPDATE shifts 
+        SET ${updateFields.join(', ')}
+        WHERE id = $${paramIndex}
+        RETURNING *
+      `;
+
+      const result = await this.databaseService.query(query, updateValues);
+      return Shift.fromDatabase(result.rows[0]);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Database query error:', error);
+      throw error;
+    }
+  }
+
+  async delete(id: number): Promise<void> {
+    try {
+      // First check if shift exists
+      await this.findById(id);
+
+      const query = 'DELETE FROM shifts WHERE id = $1';
+      await this.databaseService.query(query, [id]);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Database query error:', error);
+      throw error;
+    }
   }
 }
