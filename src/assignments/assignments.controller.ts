@@ -15,6 +15,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
+import { UpdateAssignmentStatusDto } from './dto/update-assignment-status.dto';
 
 @Controller('assignments')
 @UseGuards(JwtAuthGuard)
@@ -81,11 +82,11 @@ export class AssignmentsController {
   @Roles(Role.COMMANDER)
   async updateStatus(
     @Param('id') id: string,
-    @Body() statusData: { status: string },
+    @Body() statusData: UpdateAssignmentStatusDto,
   ) {
     const updatedAssignment = await this.assignmentsService.updateStatus(
       +id,
-      statusData.status as any,
+      statusData.status,
     );
     return {
       message: 'Assignment status updated successfully',
