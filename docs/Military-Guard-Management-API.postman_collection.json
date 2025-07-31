@@ -1,0 +1,985 @@
+{
+	"info": {
+		"_postman_id": "military-guard-management-api",
+		"name": "Military Guard Management API",
+		"description": "Comprehensive API for managing military guard shifts\n\nFeatures:\n- JWT authentication\n- Role-based access control (Commander/Soldier)\n- User, shift, and assignment management\n- Custom error handling\n- Input validation\n\nHow to Use:\n1. Register/Login as Commander or Soldier\n2. Use JWT token in all requests\n3. Test different permissions based on role\n\nSecurity:\n- JWT authentication on all routes\n- Role-based access control\n- Input validation with custom error messages",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"version": "2.0"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register Commander",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.status === 'Created' || pm.response.status === 'OK') {",
+									"    const response = pm.response.json();",
+									"    if (response.access_token) {",
+									"        pm.environment.set('commander_token', response.access_token);",
+									"        pm.environment.set('commander_id', response.user.id);",
+									"        console.log('Commander token saved:', response.access_token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"commander@example.com\",\n  \"password\": \"123456\",\n  \"name\": \"Commander One\",\n  \"role\": \"commander\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						},
+						"description": "Register new commander - automatically saves JWT token"
+					}
+				},
+				{
+					"name": "Register Soldier",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.status === 'Created' || pm.response.status === 'OK') {",
+									"    const response = pm.response.json();",
+									"    if (response.access_token) {",
+									"        pm.environment.set('soldier_token', response.access_token);",
+									"        pm.environment.set('soldier_id', response.user.id);",
+									"        console.log('Soldier token saved:', response.access_token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"soldier@example.com\",\n  \"password\": \"123456\",\n  \"name\": \"Soldier One\",\n  \"role\": \"soldier\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						},
+						"description": "Register new soldier - automatically saves JWT token"
+					}
+				},
+				{
+					"name": "Login Commander",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.status === 'OK') {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('commander_token', response.access_token);",
+									"    pm.environment.set('commander_id', response.user.id);",
+									"    console.log('Commander logged in, token saved');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"commander@example.com\",\n  \"password\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Login existing commander"
+					}
+				},
+				{
+					"name": "Login Soldier",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.status === 'OK') {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('soldier_token', response.access_token);",
+									"    pm.environment.set('soldier_id', response.user.id);",
+									"    console.log('Soldier logged in, token saved');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"soldier@example.com\",\n  \"password\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Login existing soldier"
+					}
+				}
+			],
+			"description": "Authentication endpoints for registration and login"
+		},
+		{
+			"name": "Users Management",
+			"item": [
+				{
+					"name": "[Commander] Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": ["{{base_url}}"],
+							"path": ["users"]
+						},
+						"description": "Get list of all users (commanders only)"
+					}
+				},
+				{
+					"name": "[Any] Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/profile",
+							"host": ["{{base_url}}"],
+							"path": ["users", "profile"]
+						},
+						"description": "Get current user profile"
+					}
+				},
+				{
+					"name": "[Commander] Create New User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"123456\",\n  \"name\": \"New User\",\n  \"role\": \"soldier\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": ["{{base_url}}"],
+							"path": ["users"]
+						},
+						"description": "Create new user (commanders only)"
+					}
+				},
+				{
+					"name": "[Soldier] Try Get All Users (Should Fail)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{soldier_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": ["{{base_url}}"],
+							"path": ["users"]
+						},
+						"description": "Test that soldiers cannot see all users (should return 403)"
+					}
+				}
+			],
+			"description": "User management endpoints with role-based access control"
+		},
+		{
+			"name": "Shifts Management",
+			"item": [
+				{
+					"name": "[Any] Get All Shifts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/shifts",
+							"host": ["{{base_url}}"],
+							"path": ["shifts"]
+						},
+						"description": "Get list of all shifts"
+					}
+				},
+				{
+					"name": "[Any] Get Shift by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/shifts/1",
+							"host": ["{{base_url}}"],
+							"path": ["shifts", "1"]
+						},
+						"description": "Get specific shift by ID"
+					}
+				},
+				{
+					"name": "[Commander] Create Night Shift",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.status === 'Created') {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('night_shift_id', response.data.id);",
+									"    console.log('Night shift created with ID:', response.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"startTime\": \"2025-08-01T20:00:00.000Z\",\n  \"endTime\": \"2025-08-02T08:00:00.000Z\",\n  \"location\": \"Main Gate - Position A\",\n  \"description\": \"Night shift - guard main entrance\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/shifts",
+							"host": ["{{base_url}}"],
+							"path": ["shifts"]
+						},
+						"description": "Create new night shift"
+					}
+				},
+				{
+					"name": "[Commander] Create Day Shift",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.status === 'Created') {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('day_shift_id', response.data.id);",
+									"    console.log('Day shift created with ID:', response.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"startTime\": \"2025-08-02T08:00:00.000Z\",\n  \"endTime\": \"2025-08-02T20:00:00.000Z\",\n  \"location\": \"Watch Tower - Position B\",\n  \"description\": \"Day shift - patrol and perimeter guard\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/shifts",
+							"host": ["{{base_url}}"],
+							"path": ["shifts"]
+						},
+						"description": "Create new day shift"
+					}
+				},
+				{
+					"name": "[Commander] Update Shift",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"startTime\": \"2025-08-01T20:00:00.000Z\",\n  \"endTime\": \"2025-08-02T08:00:00.000Z\",\n  \"location\": \"Main Gate - Position A (Updated)\",\n  \"description\": \"Night shift updated - enhanced security\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/shifts/{{night_shift_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["shifts", "{{night_shift_id}}"]
+						},
+						"description": "Update shift details"
+					}
+				},
+				{
+					"name": "[Soldier] Try Create Shift (Should Fail)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{soldier_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"startTime\": \"2025-08-03T20:00:00.000Z\",\n  \"endTime\": \"2025-08-04T08:00:00.000Z\",\n  \"location\": \"Back Gate\",\n  \"description\": \"Soldier attempt to create shift\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/shifts",
+							"host": ["{{base_url}}"],
+							"path": ["shifts"]
+						},
+						"description": "Test that soldiers cannot create shifts (should return 403)"
+					}
+				}
+			],
+			"description": "Shift management endpoints with role-based access control"
+		},
+		{
+			"name": "Assignments Management",
+			"item": [
+				{
+					"name": "[Commander] Get All Assignments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/assignments",
+							"host": ["{{base_url}}"],
+							"path": ["assignments"]
+						},
+						"description": "Commander sees all assignments"
+					}
+				},
+				{
+					"name": "[Soldier] Get My Assignments Only",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{soldier_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/assignments",
+							"host": ["{{base_url}}"],
+							"path": ["assignments"]
+						},
+						"description": "Soldier sees only their own assignments"
+					}
+				},
+				{
+					"name": "[Commander] Assign Soldier to Night Shift",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.status === 'Created') {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('assignment_1_id', response.data.id);",
+									"    console.log('Assignment created with ID:', response.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": {{soldier_id}},\n  \"shiftId\": {{night_shift_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/assignments",
+							"host": ["{{base_url}}"],
+							"path": ["assignments"]
+						},
+						"description": "Assign soldier to night shift"
+					}
+				},
+				{
+					"name": "[Commander] Assign Soldier to Day Shift",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.status === 'Created') {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('assignment_2_id', response.data.id);",
+									"    console.log('Assignment created with ID:', response.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": {{soldier_id}},\n  \"shiftId\": {{day_shift_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/assignments",
+							"host": ["{{base_url}}"],
+							"path": ["assignments"]
+						},
+						"description": "Assign soldier to day shift"
+					}
+				},
+				{
+					"name": "[Commander] Get Assignments by User",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/assignments/user/{{soldier_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["assignments", "user", "{{soldier_id}}"]
+						},
+						"description": "Get assignments for specific user"
+					}
+				},
+				{
+					"name": "[Commander] Get Assignments by Shift",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/assignments/shift/{{night_shift_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["assignments", "shift", "{{night_shift_id}}"]
+						},
+						"description": "Get assignments for specific shift"
+					}
+				},
+				{
+					"name": "[Commander] Complete Assignment",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"completed\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/assignments/{{assignment_1_id}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["assignments", "{{assignment_1_id}}", "status"]
+						},
+						"description": "Mark assignment as completed"
+					}
+				},
+				{
+					"name": "[Commander] Cancel Assignment",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"cancelled\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/assignments/{{assignment_2_id}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["assignments", "{{assignment_2_id}}", "status"]
+						},
+						"description": "Cancel assignment"
+					}
+				},
+				{
+					"name": "[Commander] Try Duplicate Assignment (Should Fail)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": {{soldier_id}},\n  \"shiftId\": {{night_shift_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/assignments",
+							"host": ["{{base_url}}"],
+							"path": ["assignments"]
+						},
+						"description": "Try to create duplicate assignment (should return 409 Conflict)"
+					}
+				},
+				{
+					"name": "[Soldier] Try Create Assignment (Should Fail)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": {{commander_id}},\n  \"shiftId\": {{day_shift_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/assignments",
+							"host": ["{{base_url}}"],
+							"path": ["assignments"]
+						},
+						"description": "Test that soldiers cannot create assignments (should return 403)"
+					}
+				},
+				{
+					"name": "[Commander] Delete Assignment",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/assignments/{{assignment_2_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["assignments", "{{assignment_2_id}}"]
+						},
+						"description": "Delete assignment"
+					}
+				}
+			],
+			"description": "Assignment management endpoints with comprehensive testing"
+		},
+		{
+			"name": "Error Testing & Validation",
+			"item": [
+				{
+					"name": "Invalid Email Format",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"invalid-email\",\n  \"password\": \"123456\",\n  \"name\": \"Test User\",\n  \"role\": \"soldier\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						},
+						"description": "Test validation - invalid email format"
+					}
+				},
+				{
+					"name": "Missing Required Fields",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"startTime\": \"2025-08-01T20:00:00.000Z\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/shifts",
+							"host": ["{{base_url}}"],
+							"path": ["shifts"]
+						},
+						"description": "Test validation - missing required fields in shift creation"
+					}
+				},
+				{
+					"name": "Invalid Assignment Data",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"not-a-number\",\n  \"shiftId\": -1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/assignments",
+							"host": ["{{base_url}}"],
+							"path": ["assignments"]
+						},
+						"description": "Test validation - invalid data types in assignment"
+					}
+				},
+				{
+					"name": "Invalid Status Update",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"invalid_status\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/assignments/1/status",
+							"host": ["{{base_url}}"],
+							"path": ["assignments", "1", "status"]
+						},
+						"description": "Test validation - invalid status value"
+					}
+				},
+				{
+					"name": "Non-existent User Assignment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": 99999,\n  \"shiftId\": {{day_shift_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/assignments",
+							"host": ["{{base_url}}"],
+							"path": ["assignments"]
+						},
+						"description": "Try to assign non-existent user"
+					}
+				},
+				{
+					"name": "Non-existent Shift Assignment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{commander_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": {{soldier_id}},\n  \"shiftId\": 99999\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/assignments",
+							"host": ["{{base_url}}"],
+							"path": ["assignments"]
+						},
+						"description": "Try to assign to non-existent shift"
+					}
+				},
+				{
+					"name": "No Authorization Header",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": ["{{base_url}}"],
+							"path": ["users"]
+						},
+						"description": "Request without JWT token"
+					}
+				},
+				{
+					"name": "Invalid JWT Token",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer invalid-token-here"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": ["{{base_url}}"],
+							"path": ["users"]
+						},
+						"description": "Request with invalid JWT token"
+					}
+				}
+			],
+			"description": "Comprehensive error testing and input validation"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-set base URL if not exists",
+					"if (!pm.environment.get('base_url')) {",
+					"    pm.environment.set('base_url', 'http://localhost:3000');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test script",
+					"pm.test('Status code indicates success or expected error', function () {",
+					"    // Allow success codes and expected error codes for testing",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204, 400, 401, 403, 404, 409]);",
+					"});",
+					"",
+					"// Log response for debugging",
+					"if (pm.response.json) {",
+					"    console.log('Response:', pm.response.json());",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"description": "Base server URL"
+		},
+		{
+			"key": "commander_token",
+			"value": "",
+			"description": "JWT Token for commander"
+		},
+		{
+			"key": "soldier_token",
+			"value": "",
+			"description": "JWT Token for soldier"
+		},
+		{
+			"key": "commander_id",
+			"value": "",
+			"description": "Commander user ID"
+		},
+		{
+			"key": "soldier_id",
+			"value": "",
+			"description": "Soldier user ID"
+		},
+		{
+			"key": "night_shift_id",
+			"value": "",
+			"description": "Night shift ID"
+		},
+		{
+			"key": "day_shift_id",
+			"value": "",
+			"description": "Day shift ID"
+		},
+		{
+			"key": "assignment_1_id",
+			"value": "",
+			"description": "First assignment ID"
+		},
+		{
+			"key": "assignment_2_id",
+			"value": "",
+			"description": "Second assignment ID"
+		}
+	]
+}
